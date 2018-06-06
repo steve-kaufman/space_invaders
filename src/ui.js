@@ -19,5 +19,8 @@ var UI = {
         window.innerWidth * 0.05, 
         window.innerHeight - window.innerHeight * 0.12);
         canvases.UI.ctx.restore();
+    },
+    gameOver : function(){
+        
     }
 };

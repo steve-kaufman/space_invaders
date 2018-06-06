@@ -1,5 +1,7 @@
 var bullet_sprite = new Sprite('images/bullet.png');
 
+var Projectiles = [];
+
 function Projectile(entity, enemy = false){
     var offset;
     if(enemy) offset = -1;
@@ -30,5 +32,5 @@ function Projectile(entity, enemy = false){
         for(var i in Entities) if(Entities[i] == this) Entities.splice(i - 1, 2);
     };
     
-    Entities.push(this);
+    Projectiles.push(this);
 }

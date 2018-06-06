@@ -3,9 +3,9 @@ engine.world.gravity.y = 0;
 var playing = false;
 
 var score = 0;
+var level = 1;
 
-var backgroundImg = new Sprite('images/background.png');
-var shipImg = new Sprite('images/ship.png');
+var ship = new Animation('images/ship.png', 5, 3);
 var lifeImg = new Sprite('images/life.png');
 var gameoverImg = new Sprite('images/game_over.png');
 
@@ -14,11 +14,6 @@ var canvases = {
     main : Canvas.create(),
     UI : Canvas.create()
 };
-
-function drawBackground(){
-    backgroundImg.drawPattern(0, 0, window.innerWidth, window.innerHeight, canvases.background);
-}
-backgroundImg.onload = drawBackground;
 
 lifeImg.onload = UI.draw;
 
@@ -34,7 +29,6 @@ function init(){
         window.innerHeight, {isStatic : true});
     
     player.init();
-    
     Enemy.init();
     
     Render.start();
@@ -44,13 +38,15 @@ function init(){
 function render(){
     canvases.main.ctx.clear();
     
+    for(var i in Subsystems) if(Subsystems[i].render) Subsystems[i].render();
     for(var i in Entities) if(Entities[i].render) Entities[i].render();
 }
 
 function update(){
+    if(IO.isPressed(71) && IO.isPressed(79)) gameOver();
     
-    if(!playing && IO.isTapped(13)) location.reload();
-    
+    for(var i in Projectiles) Projectiles[i].update();
+    for(var i in Subsystems) if(Subsystems[i].update) Subsystems[i].update();
     for(var i in Entities) if(Entities[i].update) Entities[i].update();
 }
 
@@ -86,7 +82,7 @@ Matter.Events.on(engine, 'collisionActive', function(e){
         player.destroy();
         player.lives -= 1;
         
-        if(player.lives == -1) gameOver();
+        if(player.lives < 0) gameOver();
         else window.setTimeout(function() {
             UI.draw();
             player.init();
@@ -101,42 +97,41 @@ Matter.Events.on(engine, 'collisionActive', function(e){
         if(!(pair.bodyA.label == 'bottom' || pair.bodyB.label == 'bottom'))
         continue;
         
-        window.setTimeout(function(){
-            gameOver();
-        }, 500);
+        gameOver();
     }
 });
 
 function gameOver(){
     playing = false;
     
-    for(var i in Entities) Entities[i].destroy();
+    window.render = function(){};
+    window.update = function(){
+        console.log('updating');
+        if(IO.isTapped(13)) location.reload();
+    };
+
+    Canvas.applyToAll('clear');
     
-    Render.stop();
-    Canvas.save();
-    window.setTimeout(function() {
-        for(var i in canvases){
-            window.canvases[i].ctx.clear();
-        }
-        canvases.background.ctx.globalAlpha = 0.9;
-        drawBackground();
-        canvases.main.ctx.fillStyle = 'black';
-        canvases.main.ctx.fillRect(0, window.innerHeight / 3 - gameoverImg.image.height,
-            window.innerWidth, gameoverImg.image.height * 2);
-        gameoverImg.draw(window.innerWidth / 2 - gameoverImg.image.width / 2,
-            window.innerHeight / 3 - gameoverImg.image.height / 2,
-            gameoverImg.image.width, gameoverImg.image.height, canvases.main);
-        var active = false;
-        canvases.UI.ctx.font = '20px Times';
-        var text = "PRESS ENTER TO CONTINUE";
-        var blinkInterval = window.setInterval(function(){
-            active = !active;
-            canvases.UI.ctx.fillStyle = active ? 'red' : 'black';
-            canvases.UI.ctx.fillText(text, 
-                window.innerWidth / 2 - 5 * text.length,
-                window.innerHeight / 2);
-        }, 500);
-    }, 500);
+    for(var i in Subsystems) if(Subsystems[i].gameOver) Subsystems[i].gameOver();
+    
+    // window.setTimeout(function() {
+    //     canvases.main.ctx.fillStyle = 'black';
+    //     canvases.main.ctx.fillRect(0, window.innerHeight / 3 - gameoverImg.image.height,
+    //         window.innerWidth, gameoverImg.image.height * 2);
+    //     gameoverImg.draw(window.innerWidth / 2 - gameoverImg.image.width / 2,
+    //         window.innerHeight / 3 - gameoverImg.image.height / 2,
+    //         gameoverImg.image.width, gameoverImg.image.height, canvases.main);
+    //     var active = false;
+    //     canvases.UI.ctx.font = '20px Times';
+    //     var text = "PRESS ENTER TO CONTINUE";
+    //     var blinkInterval = window.setInterval(function(){
+    //         active = !active;
+    //         canvases.UI.ctx.fillStyle = active ? 'red' : 'black';
+    //         canvases.UI.ctx.fillText(text, 
+    //             window.innerWidth / 2 - 5 * text.length,
+    //             window.innerHeight / 2);
+    //     }, 500);
+    // }, 500);
 }
 
 $(document).ready(init);

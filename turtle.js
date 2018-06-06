@@ -166,9 +166,16 @@ var Canvas = {
     },
     restore : function(){
         for(var i in this.canvases) this.canvases[i].ctx.restore();
+    },
+    applyToAll : function(method, canvasNotCtx = false){
+        for(var i in this.canvases){
+            if(canvasNotCtx) this.canvases[i][method]();
+            else this.canvases[i].ctx[method]();
+        }
     }
 };
 var Entities = [];
+var Subsystems = [];
 function Entity(x, y, width, height, options){
 
     this.x = x || 0;
@@ -217,7 +224,53 @@ function Entity(x, y, width, height, options){
     
     Entities.push(this);
 }
-function Sprite(filepath){
+function Animation(filepath, col, row){
+    this.loaded = false;
+    
+    var image = new Image();
+    
+    this.sprites = [];
+    
+    var self = this;
+    image.onload = function(){
+        self.width = image.width;
+        self.height = image.height;
+        for(var i = 0; i < row; i++) for(var j = 0; j < col; j++){
+            self.sprites.push(new Sprite(
+                filepath,
+                self.width / col * j, self.height / row * i,
+                self.width / col, self.height / row
+            ));
+        }
+        
+        function load(){
+            if(self.onload) self.onload();
+            self.loaded = true;
+        };
+        
+        self.wait = function(){
+            for(var i in self.sprites) if(!self.sprites[i].loaded){
+                window.setTimeout(self.wait, 0);
+                return false;
+            };
+            load();
+        }
+        self.wait();
+    }
+    image.src = filepath;
+    
+    this.play = function(framerate){
+        
+    };
+}
+function Sprite(filepath, sx, sy, sw, sh){
+    sx = sx || 0;
+    sy = sy || 0;
+    sw = sw || undefined;
+    sh = sh || undefined;
+    
+    if(!filepath) return -1;
+    
     this.loaded = false;
     
     this.image = document.createElement('canvas');
@@ -225,9 +278,12 @@ function Sprite(filepath){
     var self = this;
     
     function load(){
-        self.image.width = self.img.width;
-        self.image.height = self.img.height;
-        self.image.getContext('2d').drawImage(self.img, 0, 0);
+        
+        self.image.width = sw || self.img.width;
+        self.image.height = sh || self.img.height;
+        if(sx) self.image.getContext('2d').drawImage(self.img, sx, sy, sw, sh,
+            0, 0, sw, sh);
+        else self.image.getContext('2d').drawImage(self.img, 0, 0);
         self.loaded = true;
         if(self.onload) self.onload();
     }
