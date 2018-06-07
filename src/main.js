@@ -54,6 +54,8 @@ function render(){
 function update(){
     if(IO.isPressed(71) && IO.isPressed(79)) gameOver();
 
+    if(playing && music.paused) music.play();
+
     for(var i in Projectiles) Projectiles[i].update();
     for(var i in Subsystems) if(Subsystems[i].update) Subsystems[i].update();
     for(var i in Entities) if(Entities[i].update) Entities[i].update();
