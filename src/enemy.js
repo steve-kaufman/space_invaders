@@ -1,19 +1,20 @@
 var Enemy = {
     array : {
         width : 12,
-        height : 1,
+        height : 6,
         offsetX : 0.125,
         offsetY : 0
     },
-    
+
     direction : [0, 0],
-    
+
     speed : 1,
-    
+
     sprites : [
         new Sprite('images/invader/1.png')
         ],
-    
+
+    action : 0,
 
     init : function(){
         this.width = Math.round(window.innerWidth * 0.75 / this.array.width);
@@ -28,61 +29,72 @@ var Enemy = {
     },
     create : function(x, y, tier){
         var self = new Entity(
-            x + window.innerWidth * this.array.offsetX + this.paddingX, 
+            x + window.innerWidth * this.array.offsetX + this.paddingX,
             y + window.innerHeight * this.array.offsetY + this.paddingY,
-            32, 32, 
+            32, 32,
             {
                 isSensor : true,
                 label : 'enemy'
             }
         );
-        
+
         self.score = 10 * (this.array.height - tier);
         self.sprite = this.sprites[0];
         self.canvas = canvases.main;
         return self;
     },
-    
-    counter : 0,
-    
+
+    counter : 1,
+
     update : function(){
         var win = true;
-        
-        if(this.counter % 60 === 0){
-            switch(this.counter / 60 % 6){
-                case 5 : case 0 : this.direction = [window.innerWidth * 0.1, 0]; break;
-                case 2 : case 3 : this.direction = [-window.innerWidth * 0.1, 0]; break;
-                case 1 : case 4 : this.direction = [0, window.innerHeight / 48 * this.speed]; 
+
+        if(this.counter > 60){
+            this.counter = 0;
+            this.action = (this.action + 1) % 6;
+            switch(this.action){
+                case 0 : case 1 : this.direction = [window.innerWidth * 0.1, 0]; break;
+                case 3 : case 4 : this.direction = [-window.innerWidth * 0.1, 0]; break;
+                case 2 : case 5 : this.direction = [0, window.innerHeight / 48];
                     break;
             }
             for(var i in Entities){
                     if(Entities[i].physical.label != 'enemy') continue;
-                    
+
                     Matter.Body.translate(Entities[i].physical,
                         Matter.Vector.create(this.direction[0], this.direction[1]));
-                    if(!Math.floor(Math.random() * this.array.width * this.array.height * 0.9)) 
+                    if(!Math.floor(Math.random() * this.array.width * this.array.height * 0.9))
                         new Projectile(Entities[i], true);
             }
+
+            background.speed *= 1.02;
         }
-        
+
         for(var i in Entities){
             if(Entities[i].physical.label != 'enemy') continue;
-            
+
             win = false;
             if(Entities[i].physical.position.y > window.innerWidth * 0.5){
                 gameOver();
                 break;
             }
         }
-        
+
+        this.counter += this.speed;
+
         if(win){
-            this.speed *= 1.2;
-            this.init();
+            background.speed *= 1.1;
             this.counter = 0;
+            this.action = 0;
             level += 1;
+            if(!level % 3) this.array.height -= 1;
+            else this.array.width -= 1;
+            this.speed = 1 + level * 0.5;
+
+            if(!this.array.width || !this.array.height) gameWin();
+            else this.init();
         }
 
-        this.counter += 1;
     }
 };
 
