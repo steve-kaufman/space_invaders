@@ -34,7 +34,8 @@ function Projectile(entity, enemy = false){
             this.destroy();
     };
     this.destroy = function(){
-        for(var i in Entities) if(Entities[i] == this) Entities.splice(i - 1, 2);
+        for(var i in Projectiles) if(Projectiles[i] == this) Projectiles.splice(i, 1);
+        this.entity.destroy();
     };
 
     Projectiles.push(this);

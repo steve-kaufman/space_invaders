@@ -193,6 +193,9 @@ function Entity(x, y, width, height, options){
     
     this.physical.entity = this;
 
+    this.animation = null;
+    
+
     this.sprite = null;
     this.canvas = Canvas.canvas;
     this.render = function(isPattern){
@@ -215,6 +218,22 @@ function Entity(x, y, width, height, options){
         if(!this.rotates) Matter.Body.setAngle(this.physical, 0);
         this.x = Math.round(this.physical.position.x - this.width / 2);
         this.y = Math.round(this.physical.position.y - this.height / 2);
+        
+        if(this.animation){
+            if(!this.frame) this.frame = 0;
+            if(this.animation.loops) this.frame = (this.frame + this.animation.framerate
+                / Update.framerate)
+                % this.animation.sprites.length;
+            else{
+                this.frame += this.animation.framerate / Update.framerate;
+                if(this.frame > this.animation.sprites.length){
+                    this.animation = null;
+                    this.sprite = null;
+                    return;
+                }
+            }
+            this.sprite = this.animation.sprites[Math.floor(this.frame)];
+        }
     };
     
     this.destroy = function(){
@@ -224,12 +243,17 @@ function Entity(x, y, width, height, options){
     
     Entities.push(this);
 }
-function Animation(filepath, col, row){
+function Animation(filepath, col, row, framerate, loops = true){
+    framerate = framerate || 8;
+    
     this.loaded = false;
     
     var image = new Image();
     
     this.sprites = [];
+    
+    this.framerate = framerate;
+    this.loops = loops;
     
     var self = this;
     image.onload = function(){

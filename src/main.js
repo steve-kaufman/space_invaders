@@ -5,7 +5,6 @@ var playing = false;
 var score = 0;
 var level = 1;
 
-var ship = new Animation('images/ship.png', 5, 3);
 var lifeImg = new Sprite('images/life.png');
 var gameoverImg = new Sprite('images/game_over.png');
 var gamewinImg = new Sprite('images/game_win.png');
@@ -17,6 +16,8 @@ music.src = 'music/space_invaders.wav';
 
 var dieSound = document.createElement('audio');
 dieSound.src = 'sounds/die.wav';
+
+var maxLevel = Enemy.array.width * Enemy.array.height;
 
 var canvases = {
     background : Canvas.create(),
@@ -61,6 +62,7 @@ function update(){
     for(var i in Entities) if(Entities[i].update) Entities[i].update();
 }
 
+//enemy kill
 Matter.Events.on(engine, 'collisionActive', function(e){
     for(var i in e.pairs){
         var pair = e.pairs[i];
@@ -79,7 +81,9 @@ Matter.Events.on(engine, 'collisionActive', function(e){
         UI.draw();
     }
 });
+//player die
 Matter.Events.on(engine, 'collisionActive', function(e){
+    if(!player.keysEnabled) return;
     for(var i in e.pairs){
         var pair = e.pairs[i];
         if(!(pair.bodyA.label == 'enemy_projectile' || pair.bodyB.label == 'enemy_projectile'))
@@ -87,20 +91,19 @@ Matter.Events.on(engine, 'collisionActive', function(e){
         if(!(pair.bodyA.label == 'player' || pair.bodyB.class == 'player'))
         continue;
 
-        pair.bodyA.entity.destroy();
-        pair.bodyB.entity.destroy();
+        if(pair.bodyA.label == 'enemy_projectile') pair.bodyA.entity.destroy();
+        else pair.bodyB.entity.destroy();
 
-        player.destroy();
-        player.lives -= 1;
+        player.kill();
         dieSound.play();
 
         if(player.lives < 0) gameOver();
         else window.setTimeout(function() {
             UI.draw();
-            player.init();
         }, 500)
     }
 });
+//enemy win
 Matter.Events.on(engine, 'collisionActive', function(e){
     for(var i in e.pairs){
         var pair = e.pairs[i];
@@ -142,6 +145,16 @@ function gameWin(){
     Canvas.applyToAll('clear');
 
     for(var i in Subsystems) if(Subsystems[i].gameWin) Subsystems[i].gameWin();
+}
+
+function levelUp(){
+    if(level >= maxLevel){
+        gameWin();
+    }
+    else{
+        level += 1;
+        for(var i in Subsystems) if(Subsystems[i].levelUp) Subsystems[i].levelUp();
+    }
 }
 
 $(document).ready(init);

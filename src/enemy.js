@@ -10,9 +10,7 @@ var Enemy = {
 
     speed : 1,
 
-    sprites : [
-        new Sprite('images/invader/1.png')
-        ],
+    animation : new Animation('images/invader.png', 2, 3),
 
     action : 0,
 
@@ -28,7 +26,7 @@ var Enemy = {
         }
     },
     create : function(x, y, tier){
-        var self = new Entity(
+        var entity = new Entity(
             x + window.innerWidth * this.array.offsetX + this.paddingX,
             y + window.innerHeight * this.array.offsetY + this.paddingY,
             32, 32,
@@ -38,9 +36,9 @@ var Enemy = {
             }
         );
 
-        self.score = 10 * (this.array.height - tier);
-        self.sprite = this.sprites[0];
-        self.canvas = canvases.main;
+        entity.score = 10 * (this.array.height - tier);
+        entity.animation = this.animation;
+        entity.canvas = canvases.main;
         return self;
     },
 
@@ -67,7 +65,7 @@ var Enemy = {
                         new Projectile(Entities[i], true);
             }
 
-            background.speed *= 1.02;
+            background.speed *= 1.01;
         }
 
         for(var i in Entities){
@@ -83,18 +81,18 @@ var Enemy = {
         this.counter += this.speed;
 
         if(win){
-            background.speed *= 1.1;
-            this.counter = 0;
-            this.action = 0;
-            level += 1;
-            if(!level % 3) this.array.height -= 1;
-            else this.array.width -= 1;
-            this.speed = 1 + level * 0.5;
-
-            if(!this.array.width || !this.array.height) gameWin();
-            else this.init();
+            levelUp();
         }
 
+    },
+    levelUp : function(){
+        this.counter = 0;
+        this.action = 0;
+        if(!level % 3) this.array.height -= 1;
+        else this.array.width -= 1;
+        this.speed = 1 + level * 0.5;
+        for(var i in Entities) if(Entities[i].label == 'enemy') Entities[i].destroy();
+        this.init();
     }
 };
 

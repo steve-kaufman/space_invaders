@@ -1,14 +1,14 @@
 var UI = {
     width : 32,
     height : 32,
-    offsetX : 0.1,
+    offsetX : 0.05,
     offsetY : 0.1,
     draw : function(){
         canvases.UI.ctx.clear();
         canvases.UI.ctx.save();
         for(var i = 0; i < player.lives; i++){
             lifeImg.draw(
-                window.innerWidth - window.innerWidth * UI.offsetX + i * UI.width,
+                window.innerWidth - (window.innerWidth * UI.offsetX) - (player.lives * UI.width) + (i * UI.width),
                 window.innerHeight - window.innerHeight * UI.offsetY,
                 UI.width, UI.height, canvases.UI
             );
@@ -37,6 +37,29 @@ var UI = {
     },
     gameWin : function(){
       this.gameOver();
+    },
+    levelUp : function(){
+        var text = 'LEVEL ' + level;
+        var x = (window.innerWidth - text.length * 20) / 2;
+        var y = window.innerHeight * 0.4;
+        var fading = true;
+        var fade = function(){
+            UI.draw();
+            canvases.UI.ctx.globalAlpha -= 0.01;
+            canvases.UI.ctx.fillStyle = 'blue';
+            canvases.UI.ctx.font = '40px Times'
+            canvases.UI.ctx.fillText(text, x, y);
+            if(canvases.UI.ctx.globalAlpha <= 0.01){
+                canvases.UI.ctx.globalAlpha = 1;
+                UI.draw();
+                fading = false;
+            }
+            fadeInterval();
+        };
+        var fadeInterval = function(){
+            if(fading) setTimeout(fade, 1000 / 60);
+        };
+        fade();
     }
 };
 
